@@ -1,4 +1,5 @@
 const Campground = require('../models/campground');
+const { uploadImage } = require('../cloudinary');
 
 module.exports.index = async (req, res) => {
     const campgrounds = await Campground.find({});
@@ -28,8 +29,11 @@ module.exports.showCampground = async (req, res) => {
 module.exports.createCampground = async (req, res) => {
     // if (!req.body.campground) throw new ExpressError('不正なキャンプ場のデータです', 400);
     const campground = new Campground(req.body.campground);
+    const uploaded = await Promise.all(req.files.map((f) => uploadImage(f.buffer)));
+    campground.images = uploaded.map((r) => ({ url: r.secure_url, filename: r.public_id }));
     campground.author = req.user._id;
     await campground.save();
+    console.log(campground);
     req.flash('success', '新しいキャンプ場を登録しました');
     res.redirect(`/campgrounds/${campground._id}`);
 };

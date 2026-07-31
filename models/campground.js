@@ -4,7 +4,12 @@ const { Schema } = mongoose;
 
 const campgroundSchema = new Schema({
     title: String,
-    image: String,
+    images: [
+        {
+            url: String,
+            filename: String,
+        },
+    ],
     price: Number,
     description: String,
     location: String,
@@ -31,4 +36,3 @@ campgroundSchema.post('findOneAndDelete', async function (doc) {
 });
 
 module.exports = mongoose.model('Campground', campgroundSchema);
-
