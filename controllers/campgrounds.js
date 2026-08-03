@@ -2,6 +2,9 @@ const Campground = require('../models/campground');
 const { uploadImage } = require('../cloudinary');
 const { cloudinary } = require('../cloudinary');
 
+const maptilerClient = require('@maptiler/client');
+maptilerClient.config.apiKey = process.env.MAPTILER_API_KEY;
+
 module.exports.index = async (req, res) => {
     const campgrounds = await Campground.find({});
     res.render('campgrounds/index', { campgrounds });
@@ -29,7 +32,10 @@ module.exports.showCampground = async (req, res) => {
 
 module.exports.createCampground = async (req, res) => {
     // if (!req.body.campground) throw new ExpressError('不正なキャンプ場のデータです', 400);
+    const geoData = await maptilerClient.geocoding.forward(req.body.campground.location, { limit: 1 });
+    // console.log(geoData);
     const campground = new Campground(req.body.campground);
+    campground.geometry = geoData.features[0].geometry;
     const uploaded = await Promise.all(req.files.map((f) => uploadImage(f.buffer)));
     campground.images = uploaded.map((r) => ({ url: r.secure_url, filename: r.public_id }));
     campground.author = req.user._id;
